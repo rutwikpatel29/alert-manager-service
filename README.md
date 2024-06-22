@@ -8,7 +8,7 @@ alert_manager/
 ├── actions.py
 ├── handlers/
 │   ├── __init__.py
-│   └── sample_handler.py
+│   └── handler.py
 ├── requirements.txt
 ├── README.md
 └── config.py
