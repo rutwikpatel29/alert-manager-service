@@ -1,0 +1,10 @@
+apiVersion: getambassador.io/v2
+kind: Mapping
+metadata:
+  name: alert-manager-service
+  namespace: observability
+spec:
+  timeout_ms: 10000
+  host: <host-URL>
+  prefix: /
+  service: alert-manager-service:5000
