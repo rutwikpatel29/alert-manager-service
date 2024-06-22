@@ -2,13 +2,14 @@
 ## Overview
 A system to manage alerts programmatically with defined actions. 
 
+
 alert_manager/
 ├── app.py
 ├── enrich.py
 ├── actions.py
 ├── handlers/
 │   ├── __init__.py
-│   └── sample_handler.py
+│   └── handler.py
 ├── requirements.txt
 ├── README.md
 └── config.py
