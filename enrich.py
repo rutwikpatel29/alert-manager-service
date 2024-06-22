@@ -1,4 +1,3 @@
-# enrich.py
 from prometheus_api_client import PrometheusConnect
 import logging
 

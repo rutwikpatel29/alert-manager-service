@@ -1,45 +1,33 @@
-import requests
-import config
+import logging
+import actions
 
-def handle_pod_crash_looping_alert(alert):
-    """
-    Handle alerts for crash looping pods.
-    This function will:
-    1. Send a notification to Slack.
-    2. Scale the affected deployment.
-    """
-    # Send a notification to Slack
-    send_slack_notification(alert)
-    
-    # Scale the affected deployment
-    scale_deployment(alert)
-    
-def send_slack_notification(alert):
-    slack_webhook_url = config.SLACK_WEBHOOK_URL
-    message = {
-        "text": f"Critical Alert: {alert['labels']['alertname']}\n"
-                f"Description: {alert['annotations']['description']}\n"
-                f"Pod: {alert['labels']['pod']}\n"
-                f"Namespace: {alert['labels']['namespace']}\n"
-                f"Severity: {alert['labels']['severity']}\n"
-                f"Timestamp: {alert['startsAt']}"
-    }
-    requests.post(slack_webhook_url, json=message)
+# Configure logging
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
-def scale_deployment(alert):
-    # Extract relevant information from the alert
-    namespace = alert['labels']['namespace']
-    deployment_name = alert['labels']['pod'].rsplit('-', 2)[0]  # Assuming the pod name is formatted as 'deployment-name-randomstring'
-    # Use Kubernetes API to scale the deployment (assuming you have permissions set up)
-    api_url = f"https://kubernetes.default.svc/apis/apps/v1/namespaces/{namespace}/deployments/{deployment_name}/scale"
-    headers = {"Authorization": f"Bearer {config.KUBERNETES_API_TOKEN}"}
-    payload = {
-        "spec": {
-            "replicas": 0  # Scale down to 0 to stop the crash looping
-        }
-    }
-    response = requests.put(api_url, json=payload, headers=headers, verify=False)  # Verify=False for self-signed certs in cluster
-    if response.status_code == 200:
-        print(f"Successfully scaled down deployment {deployment_name} in namespace {namespace}")
-    else:
-        print(f"Failed to scale deployment: {response.text}")
+def handle_alert(alert):
+    """
+    Main handler function to process alerts based on their type.
+    """
+    try:
+        alert_name = alert['labels'].get('alertname', 'N/A')
+        logger.info(f"Handling alert: {alert_name}")
+        
+        if alert_name == 'KubePodCrashLooping':
+            logger.debug("Detected KubePodCrashLooping alert")
+            actions.handle_pod_crash_looping_alert(alert)
+        else:
+            logger.warning(f"Unhandled alert type: {alert_name}")
+        
+        logger.info(f"Handled alert: {alert_name} successfully")
+    except Exception as e:
+        logger.error(f"Error handling alert: {e}", exc_info=True)
+
+# Example usage:
+# if __name__ == '__main__':
+#     test_alert = {
+#         'labels': {'alertname': 'KubePodCrashLooping', 'pod': 'example-pod', 'namespace': 'default'},
+#         'annotations': {'description': 'Pod is crash looping', 'summary': 'Pod is crash looping'},
+#         'startsAt': '2024-06-22T06:51:14.437Z'
+#     }
+#     handle_alert(test_alert)
