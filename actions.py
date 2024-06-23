@@ -3,7 +3,7 @@ import config
 import logging
 
 # Configure logging
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levellevel)s - %(message)s')
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 def handle_pod_crash_looping_alert(alert):
@@ -24,13 +24,15 @@ def send_slack_notification(alert):
     """
     try:
         slack_webhook_url = config.SLACK_WEBHOOK_URL
+        enriched_data = alert.get('enriched_data', {})
         message = {
             "text": f"Critical Alert: {alert['labels']['alertname']}\n"
                     f"Description: {alert['annotations']['description']}\n"
                     f"Pod: {alert['labels']['pod']}\n"
                     f"Namespace: {alert['labels']['namespace']}\n"
                     f"Severity: {alert['labels']['severity']}\n"
-                    f"Timestamp: {alert['startsAt']}"
+                    f"Timestamp: {alert['startsAt']}\n"
+                    f"Enriched Data: CPU: {enriched_data.get('cpu_utilization', 'N/A')}, Memory: {enriched_data.get('memory_utilization', 'N/A')}"
         }
         response = requests.post(slack_webhook_url, json=message)
         if response.status_code == 200:
